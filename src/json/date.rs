@@ -1,4 +1,6 @@
-use chrono::{ DateTime, FixedOffset };
+use std::str::FromStr;
+
+use chrono::{ DateTime, FixedOffset, NaiveDateTime };
 use serde::{ Serializer, Deserializer, Serialize, Deserialize };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -32,8 +34,14 @@ impl Serialize for Date {
 
 impl<'de> Deserialize<'de> for Date {
   fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
-    let date = String::deserialize(deserializer)?;
-    let date = DateTime::parse_from_rfc3339(&date).map_err(serde::de::Error::custom)?;
-    Ok(Date { date })
+    let date_str = String::deserialize(deserializer)?;
+    if let Ok(date) = DateTime::parse_from_rfc3339(&date_str) {
+      Ok(Date { date })
+    } else {
+      let date = NaiveDateTime::from_str(&date_str)
+        .map(|dt| dt.and_utc().into())
+        .map_err(serde::de::Error::custom)?;
+      Ok(Date { date })
+    }
   }
 }

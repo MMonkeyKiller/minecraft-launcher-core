@@ -110,17 +110,17 @@ impl VersionManifest {
   }
 
   pub fn get_classpath(&self, _os: &OperatingSystem, mc_dir: &Path, env_features: &EnvironmentFeatures) -> Vec<PathBuf> {
-    let mut vec = vec![];
+    let mut set = HashSet::new();
     let libraries = self.get_relevant_libraries(env_features);
     for library in libraries {
       if library.natives.is_empty() {
-        vec.push(mc_dir.join("libraries").join(library.get_artifact_path(None).replace('/', MAIN_SEPARATOR_STR)));
+        set.insert(mc_dir.join("libraries").join(library.get_artifact_path(None).replace('/', MAIN_SEPARATOR_STR)));
       }
     }
 
     let jar_id = self.get_jar().to_string();
-    vec.push(mc_dir.join("versions").join(&jar_id).join(format!("{jar_id}.jar")));
-    vec
+    set.insert(mc_dir.join("versions").join(&jar_id).join(format!("{jar_id}.jar")));
+    set.into_iter().collect()
   }
 }
 
